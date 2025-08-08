@@ -23,14 +23,14 @@ def download_google_sheet_as_excel(file_id, filename):
 
 def load_new_employee():
     path = download_google_sheet_as_excel(FILE_IDS["new_employee"], "New_Employee.xlsx")
-    return pd.read_excel(path)
+    return pd.read_excel(path, engine="openpyxl")
 
 def load_daily_reports():
     dfs = []
     for key in ["daily_raewwadee", "daily_pattama"]:
         filename = key + ".xlsx"
         path = download_google_sheet_as_excel(FILE_IDS[key], filename)
-        df = pd.read_excel(path)
+        df = pd.read_excel(path, engine="openpyxl")
         df.columns = df.columns.str.strip()
         team_member = "Raewwadee Jaidee" if key == "daily_raewwadee" else "Pattama Sooksan"
         df["Team Member"] = team_member
@@ -64,10 +64,7 @@ def index():
         output_path = os.path.join(DOWNLOAD_DIR, "Matched_Employees_Report.xlsx")
         result.to_excel(output_path, index=False)
 
-        # Generate HTML table
         table_html = result.to_html(index=False)
-
-        # Basic template with a download button
         html_template = f"""
         <html>
             <head><title>Matched Employees</title></head>
