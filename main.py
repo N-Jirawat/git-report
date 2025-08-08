@@ -15,6 +15,11 @@ FILE_IDS = {
     "daily_pattama": "1TxIOKhR2ZDMPAZAERpNlDYI8my63HW2S"
 }
 
+@app.route("/")
+def home():
+    return "API is running! Go to /match to see results."
+
+
 def download_google_sheet_as_excel(file_id, filename):
     url = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
     output_path = os.path.join(DOWNLOAD_DIR, filename)
