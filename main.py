@@ -1,6 +1,9 @@
 import os
 import gdown
 import pandas as pd
+from flask import Flask
+
+app = Flask(__name__)
 
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "data")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
@@ -75,5 +78,9 @@ def main():
     except Exception as e:
         print(f"Error saving Excel file: {e}")
 
+@app.route('/')
+def index():
+    return "Skill Test for Programmer Trainee_Jirawat Sunakam"
+
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)
