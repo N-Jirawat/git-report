@@ -1,13 +1,9 @@
-from flask import Flask, jsonify, render_template_string
-import pandas as pd
 import os
 import gdown
+import pandas as pd
+from flask import Flask, send_file, render_template_string, jsonify
 
 app = Flask(__name__)
-
-# ------------------------------
-# DOWNLOAD & PROCESS
-# ------------------------------
 
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "data")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
@@ -55,10 +51,6 @@ def match_employees(new_employees, daily_reports):
     )
     return merged[["Employee Name", "Join Date", "Role", "Team Member"]]
 
-# ------------------------------
-# ROUTES
-# ------------------------------
-
 @app.route("/")
 def index():
     try:
@@ -69,23 +61,35 @@ def index():
         if result.empty:
             return "No matching employee records found."
 
-        # Convert DataFrame to HTML table
-        html_table = result.to_html(index=False)
+        output_path = os.path.join(DOWNLOAD_DIR, "Matched_Employees_Report.xlsx")
+        result.to_excel(output_path, index=False)
 
-        # Render as simple web page
+        # Generate HTML table
+        table_html = result.to_html(index=False)
+
+        # Basic template with a download button
         html_template = f"""
         <html>
             <head><title>Matched Employees</title></head>
             <body>
                 <h1>Matched Employees</h1>
-                {html_table}
+                {table_html}
+                <br><br>
+                <a href="/download" style="font-size:18px;">⬇️ Download as Excel</a>
             </body>
         </html>
         """
         return render_template_string(html_template)
 
     except Exception as e:
-        return f"Error occurred: {str(e)}"
+        return f"Error: {str(e)}"
+
+@app.route("/download")
+def download_excel():
+    filepath = os.path.join(DOWNLOAD_DIR, "Matched_Employees_Report.xlsx")
+    if os.path.exists(filepath):
+        return send_file(filepath, as_attachment=True)
+    return "File not found.", 404
 
 @app.route("/match")
 def match_route():
@@ -98,8 +102,5 @@ def match_route():
 
     return jsonify(result.to_dict(orient="records")), 200
 
-# ------------------------------
-# MAIN
-# ------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
