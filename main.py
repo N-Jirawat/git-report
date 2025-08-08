@@ -1,24 +1,15 @@
 import os
 import gdown
 import pandas as pd
-from flask import Flask, jsonify
-
-app = Flask(__name__)
 
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "data")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-# Google Sheets file IDs
 FILE_IDS = {
     "new_employee": "1Wb5dBl1DL-NsTVzbxc1Pv2E-EZo2dzqh",
     "daily_raewwadee": "1v4YxphVcP8j24cDcxC0OkwzgXmaoy3ek",
     "daily_pattama": "1TxIOKhR2ZDMPAZAERpNlDYI8my63HW2S"
 }
-
-@app.route("/")
-def home():
-    return "API is running! Go to /match to see results."
-
 
 def download_google_sheet_as_excel(file_id, filename):
     url = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
@@ -26,6 +17,8 @@ def download_google_sheet_as_excel(file_id, filename):
     if not os.path.exists(output_path):
         print(f"Downloading {filename} from Google Sheets...")
         gdown.download(url, output_path, quiet=False)
+    else:
+        print(f"{filename} already downloaded.")
     return output_path
 
 def load_new_employee():
@@ -39,7 +32,6 @@ def load_daily_reports():
         path = download_google_sheet_as_excel(FILE_IDS[key], filename)
         df = pd.read_excel(path)
         df.columns = df.columns.str.strip()
-        # Add team member name based on file key
         team_member = "Raewwadee Jaidee" if key == "daily_raewwadee" else "Pattama Sooksan"
         df["Team Member"] = team_member
         dfs.append(df)
@@ -59,19 +51,29 @@ def match_employees(new_employees, daily_reports):
     )
     return merged[["Employee Name", "Join Date", "Role", "Team Member"]]
 
-@app.route("/match", methods=["GET"])
-def match_route():
+def main():
     new_employees = load_new_employee()
     daily_reports = load_daily_reports()
 
     if new_employees.empty or daily_reports.empty:
-        return jsonify({"error": "Data not found."}), 404
+        print("Data not found or failed to download.")
+        return
 
     result = match_employees(new_employees, daily_reports)
-    if result.empty:
-        return jsonify({"message": "No matches found."}), 200
 
-    return jsonify(result.to_dict(orient="records")), 200
+    if result.empty:
+        print("No matching employee records found.")
+        return
+
+    print("\nList of new employees according to the interview team:")
+    print(result.to_string(index=False))
+
+    output_path = os.path.join(DOWNLOAD_DIR, "Matched_Employees_Report.xlsx")
+    try:
+        result.to_excel(output_path, index=False)
+        print(f"\nResult saved to: {output_path}")
+    except Exception as e:
+        print(f"Error saving Excel file: {e}")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    main()
