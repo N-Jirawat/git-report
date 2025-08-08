@@ -15,10 +15,10 @@ FILE_IDS = {
 }
 
 def download_google_sheet_as_excel(file_id, filename):
-    url = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
+    url = f"https://drive.google.com/uc?id={file_id}&export=download"
     output_path = os.path.join(DOWNLOAD_DIR, filename)
     if not os.path.exists(output_path):
-        gdown.download(url, output_path, quiet=False)
+        gdown.download(url, output_path, quiet=False, fuzzy=True)
     return output_path
 
 def load_new_employee():
