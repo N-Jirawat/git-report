@@ -2,3 +2,4 @@ Flask
 pandas
 gdown
 openpyxl
+gunicorn
